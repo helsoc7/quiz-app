@@ -2,9 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import { fetchUsers } from "@/app/(auth)/actions/fetchUsers";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton
+} from "@clerk/nextjs";
 
 function LayoutProvider({
   children,
@@ -27,28 +33,37 @@ function LayoutProvider({
   };
 
   const getContent = () => {
-    if (isPublicRoute) return null;
-    return <>{children}</>;
+    if (isPublicRoute) return <>{children}</>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-secondary">
+        <div className="shadow-lg mb-4">
+          <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </div>
+        {children}
+      </div>
+    );
   };
 
   const getCurrentUser = async () => {
     try {
       const response: any = await fetchUsers();
-      if (response.error)
-        throw new Error(response.error.message);
+      if (response.error) throw new Error(response.error.message);
     } catch (error) {
       console.log(error);
-    } finally {
-      return;
     }
   };
 
   useEffect(() => {
     if (!isPublicRoute) getCurrentUser();
-  }, []);
+  }, [isPublicRoute]);
 
   return (
-    <div className="min-h-screen bg-secondary flex flexCol justify-between">
+    <div className="min-h-screen bg-secondary flex flex-col justify-between">
       {getNavbar()}
       {getContent()}
       {getFooter()}
